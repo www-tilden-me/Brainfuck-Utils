@@ -1,4 +1,7 @@
 # @desc: reads a brainfuck file and translates it back to psuedocode
+# @assumes: valid brainfuck code -- executes without overflow, out of bounds, or other
+# @assumes: no user input -- no ","
+
 import sys
 import re
 
@@ -10,81 +13,43 @@ def add_command(program, cmd_str, indentation):
     program += "\t"*indentation + cmd_str + "\n"
     return program
 
-indentation = 0
-arithmetic = 0
-ptr_math = 0
-decompiled = """memory = [0]*30_000;\nptr = 0;\n"""
-for cmd in code:
+#try more of a simulator
+result = ""
+
+memory = [0]*30_000
+ptr = 0
+while_stack = []
+i = 0
+while i < len(code):
+    cmd = code[i]
     match cmd:
         case "+":
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
-
-            arithmetic += 1
+            memory[ptr] += 1
             
         case "-":
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
-
-            arithmetic -= 1
+            memory[ptr] -= 1
             
         case ">":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, f"memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-
-            ptr_math += 1
+            ptr += 1
             
         case "<":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, f"memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-
-            ptr_math -= 1
+            ptr -= 1
             
         case "[":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, "memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
-
-            decompiled = add_command(decompiled, "while (true){", indentation)
-            indentation += 1
+            while_stack += [i]
             
         case "]":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, f"memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
+            last = while_stack.pop()
+            if (memory[ptr] != 0):
+                i = last
+                continue
 
-            decompiled = add_command(decompiled, "if (memory[ptr] == 0){ break }", indentation)
-            indentation -= 1
-            decompiled = add_command(decompiled, "}", indentation)
-
-        case ",":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, f"memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
-
-            decompiled = add_command(decompiled, "memory[ptr] = getchar();", indentation)
+        case ",": # assume no inputs for now
+            pass
 
         case ".":
-            if (arithmetic != 0):
-                decompiled = add_command(decompiled, f"memory[ptr] += {arithmetic};", indentation)
-                arithmetic = 0
-            if (ptr_math != 0):
-                decompiled = add_command(decompiled, f"ptr += {ptr_math};", indentation)
-                ptr_math = 0
+            result += chr(memory[ptr])
+            
+    i+=1
 
-            decompiled = add_command(decompiled, "print(memory[ptr]);", indentation)
-
-print(decompiled)
+print(result)
