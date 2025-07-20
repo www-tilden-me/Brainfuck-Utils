@@ -79,7 +79,7 @@ file_name = sys.argv[1]
 with open(file_name, "r") as file:
 	code = file.read()
 
-N = 1000
+N = 10000
 size_cost = len(code)
 
 def simulated_putchar(*args, **kwargs):
@@ -96,7 +96,7 @@ for _ in range(N):
 	memory_cost += mc 
 
 COSTS = f"""
-COST OF \"{file_name}\" ({N} trails):
+COST OF \"{file_name}\" ({N} trials):
 """
 data = [
 	["Size", size_cost],
